@@ -21,14 +21,15 @@ public class NormalizerBolt extends BaseBasicBolt {
   @Override
   public void execute(Tuple tuple, BasicOutputCollector collector) {
 
-    /*
-    ----------------------TODO-----------------------
-    Task:
-     1. make the words all lower case
-     2. remove the common words
-
-    ------------------------------------------------- */
-
+	  String words = tuple.getString(0);
+	  
+	  String lowerWord = words.toLowerCase();
+	  
+	  if (commonWords.contains(lowerWord)) {
+		  return;
+	  } else {
+		  collector.emit(new Values(lowerWord));
+	  }
 
   }
 
