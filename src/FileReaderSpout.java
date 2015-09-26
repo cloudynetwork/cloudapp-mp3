@@ -1,9 +1,12 @@
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Map;
+
+import javax.swing.plaf.synth.SynthSeparatorUI;
 
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -15,36 +18,54 @@ import backtype.storm.tuple.Values;
 public class FileReaderSpout implements IRichSpout {
   private SpoutOutputCollector _collector;
   private TopologyContext context;
-
+  private String inFile;
+  private BufferedReader br;
+  
+  
+  public FileReaderSpout(String inFile) {
+	this.inFile = inFile;
+}
 
   @Override
   public void open(Map conf, TopologyContext context,
                    SpoutOutputCollector collector) {
 
-     /*
-    ----------------------TODO-----------------------
-    Task: initialize the file reader
-
-
-    ------------------------------------------------- */
+	   System.out.println("Loading " + inFile);
+	   
+		File file = new File(this.inFile);
+		try {
+			this.br = new BufferedReader(new FileReader(file));
+		} catch (FileNotFoundException e) {
+			System.out.println("File not found: " + inFile);
+		}
 
     this.context = context;
     this._collector = collector;
   }
 
-  @Override
-  public void nextTuple() {
+	@Override
+	public void nextTuple() {
 
-     /*
-    ----------------------TODO-----------------------
-    Task:
-    1. read the next line and emit a tuple for it
-    2. don't forget to sleep when the file is entirely read to prevent a busy-loop
+		try {
+			String line = br.readLine();
 
-    ------------------------------------------------- */
+			if (line != null) {
+				_collector.emit(new Values(line));
+			}
 
+			else {
+				Thread.sleep(5000);
 
-  }
+			}
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			System.out.println("Error emitting words");
+		} catch (InterruptedException e) {
+			System.out.println("INFO: Output thread was interrupted");
+		}
+
+	}
 
   @Override
   public void declareOutputFields(OutputFieldsDeclarer declarer) {
@@ -55,15 +76,16 @@ public class FileReaderSpout implements IRichSpout {
 
   @Override
   public void close() {
-   /*
-    ----------------------TODO-----------------------
-    Task: close the file
 
-
-    ------------------------------------------------- */
-
+	  try {
+		  if (br != null) 
+		  {
+			  br.close();
+		  }
+	  } catch (IOException e) {
+		  System.out.println("Error: Couldn't close file");
+	  }
   }
-
 
   @Override
   public void activate() {
